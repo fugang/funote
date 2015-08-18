@@ -1,2 +1,2 @@
 # funote
-note onlone 
+note online 
