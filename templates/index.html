@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Quill Editor Online</title>
+    <link rel="stylesheet" type="text/css" href="static/css/style.css">
+    <meta charset="utf-8">
+  </head>
+  <body>
+  <div class="navigation">        
+   <div id="regin-menu">
+    <select >
+	{% for i in regins %}
+      <option value="{{ i.id }}">{{i.title}}</option>
+	{% endfor %}
+    </select >
+   </div>
+   <div id="user-info">
+   <text>name</text>
+   <input id="username" type="text"></text>
+   <button id="login">login</button>
+   </div>
+  </div>
+  <h1></h1>
+    <div id="tagname">
+	{% for i in quilltext %}
+	   <input type="submit" value="{{ i.header }}" id="{{ i.id }}" >
+	{% endfor %}
+	</div>
+    <div id="content-container">
+      <div id="editor-wrapper">
+        <div id="formatting-container">
+          <select title="Font" class="ql-font">
+            <option value="sans-serif" selected>Sans Serif</option>
+            <option value="Georgia, serif">Serif</option>
+            <option value="Monaco, 'Courier New', monospace">Monospace</option>
+          </select>
+          <select title="Size" class="ql-size">
+            <option value="10px">Small</option>
+            <option value="13px" selected>Normal</option>
+            <option value="18px">Large</option>
+            <option value="32px">Huge</option>
+          </select>
+          <select title="Text Color" class="ql-color">
+            <option value="rgb(255, 255, 255)">White</option>
+            <option value="rgb(0, 0, 0)" selected>Black</option>
+            <option value="rgb(255, 0, 0)">Red</option>
+            <option value="rgb(0, 0, 255)">Blue</option>
+            <option value="rgb(0, 255, 0)">Lime</option>
+            <option value="rgb(0, 128, 128)">Teal</option>
+            <option value="rgb(255, 0, 255)">Magenta</option>
+            <option value="rgb(255, 255, 0)">Yellow</option>
+          </select>
+          <select title="Background Color" class="ql-background">
+            <option value="rgb(255, 255, 255)" selected>White</option>
+            <option value="rgb(0, 0, 0)">Black</option>
+            <option value="rgb(255, 0, 0)">Red</option>
+            <option value="rgb(0, 0, 255)">Blue</option>
+            <option value="rgb(0, 255, 0)">Lime</option>
+            <option value="rgb(0, 128, 128)">Teal</option>
+            <option value="rgb(255, 0, 255)">Magenta</option>
+            <option value="rgb(255, 255, 0)">Yellow</option>
+          </select>
+          <select title="Text Alignment" class="ql-align">
+            <option value="left" selected>Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+            <option value="justify">Justify</option>
+          </select>
+          <button title="Bold" class="ql-format-button ql-bold">Bold</button>
+          <button title="Italic" class="ql-format-button ql-italic">Italic</button>
+          <button title="Underline" class="ql-format-button ql-underline">Under</button>
+          <button title="Strikethrough" class="ql-format-button ql-strike">Strike</button>
+          <button title="Link" class="ql-format-button ql-link">Link</button>
+          <button title="Image" class="ql-format-button ql-image">Image</button>
+          <button title="Bullet" class="ql-format-button ql-bullet">Bullet</button>
+          <button title="List" class="ql-format-button ql-list">List</button>
+        </div>
+        <div id="editor-container"></div>
+      </div>
+    </div>
+    <script type="text/javascript" src="static/js/quill.js"></script>
+	<script type="text/javascript" src="static/js/jquery.min.js"></script>
+    <script type="text/javascript">
+	  var note_id;
+	  var change_tag;
+	  String.prototype.format = function() {
+		var formatted = this;
+		for (var i = 0; i < arguments.length; i++) {
+			var regexp = new RegExp('\\{'+i+'\\}', 'gi');
+			formatted = formatted.replace(regexp, arguments[i]);
+		}
+		return formatted;
+	  };
+      var editor = new Quill('#editor-container', {
+        modules: {
+          'toolbar': { container: '#formatting-container' },
+          'link-tooltip': true,
+          'image-tooltip': true
+        }
+      });
+	  $("#regin-menu").change(function(){
+		regin = $('option:selected', $(this)).attr("value");
+		console.log(regin);
+		$.ajax({
+			type:"POST",
+			url:"/regin",
+			data:{"regin":regin},
+			success:function(data){
+				$("#tagname").empty();
+				var jdata = jQuery.parseJSON(data);
+				jdata.forEach(function(key){
+					note_header = key.header;
+					note_id = key.id;
+					$("#tagname").append("<input type='submit' value='{0}' id='{1}' >".format(note_header, note_id))
+				});
+				note_id=null;
+				change_tag=null;
+				editor.setHTML("");
+				console.log("change regin"); 
+			},
+			error:function(data){
+			    console.log("change regin error");
+			},
+		})
+	  });
+
+	  $("h1").text("new content");
+	  editor.on('selection-change', function(range) {
+		if (range) {
+			if(note_id){
+			  $("h1").text("edit content");
+			}else{
+			  $("h1").text("edit new content");
+			} 
+		}else {
+			console.log('Cursor not in the editor');
+			var html = editor.getHTML();
+			var text = editor.getText();
+			if(change_tag){
+			  if(! note_id){
+				$.ajax({
+					 type:"POST",
+					 url:"/note",
+					 data:{html:html,text:text},
+					 success:function(data){
+						var jdata = jQuery.parseJSON(data);
+						note_id = jdata.id;
+						note_header = jdata.header;
+						console.log(note_header);
+						$("#tagname").append("<input type='submit' value='{0}' id='{1}' >".format(note_header, note_id))
+						console.log("create");
+						change_tag=false;
+						$("h1").text("saved");
+					 },
+					 error:function(){
+						$("h1").text("server error");
+					 }
+				  })
+			   }else{
+			   	 $.ajax({
+			       type:"POST",
+				   url:"/note/"+ note_id,
+				   data:{html:html,text:text},
+				   success:function(data){
+					  $("#"+note_id).attr({"value":data});
+					  change_tag=false;
+					  $("h1").text("saved");
+					  console.log("update success");
+                   },
+                   error:function(){
+				     $("h1").text("server error");
+					 console.log("server error");
+                   }
+			     })
+			   }
+			}else{
+				$("h1").text("no action");
+			}
+		  }
+	  });
+	  editor.on('text-change', function(delta, source) {
+        if (source == 'api') {
+           console.log("An API call triggered this change.");
+        } else if (source == 'user') {
+           console.log("A user action triggered this change.");
+		   change_tag = true;
+        }
+		
+      });
+	  $( document ).on("click","input[type=submit]",function(event){
+		note_id = $(this).attr("id");
+		   $.ajax({
+		     type:"GET",
+			 url:"/note/"+ note_id,
+			 success:function(data){
+                editor.setHTML(data);
+				console.log("load html");
+				$("h1").text("load html");
+             },
+             error:function(){
+                alert("server  error");
+				$("h1").text("server  error");
+             }
+		   })
+	  });
+	  $("#login").click(function(){
+	    $("#username").attr({"type":"text","disabled":true});
+		var name = $("#username").val();
+		$.ajax({
+			type:"POST",
+			url:"/login",
+			data:{name:name},
+			success:function(data){
+				console.log("login success");
+			},
+			error: function(data){
+				console.log("login error");
+			}
+		});
+		console.log(name);
+	  });
+	  setInterval(function(){
+		var html = editor.getHTML();
+		var text = editor.getText();
+		if(note_id){
+			if(change_tag){
+			  $.ajax({
+			     type:"POST",
+				 url:"/note/"+ note_id,
+				 data:{html:html,text:text},
+				 success:function(data){
+					$("#"+note_id).attr({"value":data});
+					console.log("update success");
+					$("h1").text("saved");
+                 },
+                 error:function(){
+                    console.log("server error");
+					$("h1").text("server error");
+                 }
+			  })
+			  change_tag=false;
+			}else{
+			  console.log("unchange")
+			}
+	    }
+		else{
+			if(change_tag){
+			  $.ajax({
+			     type:"POST",
+				 url:"/note",
+				 data:{html:html,text:text},
+				 success:function(data){
+					var jdata = jQuery.parseJSON(data);
+					note_id = jdata.id;
+					note_header = jdata.header;
+					$("#title-content").append("<input type='submit' value='{0}' id='{1}' >".format(note_header, note_id))
+					console.log("create");
+					$("h1").text("create new content");
+                 },
+                 error:function(){
+                    console.log("server  error");
+					$("h1").text("server error");
+                 }
+			  })
+			  change_tag=false;
+			}else{
+			  console.log("unknow")
+			}
+		}
+	  }, 60*1000);
+    </script>
+  </body>
+</html>
