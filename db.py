@@ -43,6 +43,7 @@ class QuillBase(Base, MyBase):
     created_at = Column(DateTime, default=datetime.now())
     id = Column(Integer, primary_key=True,nullable=False)
     regin_id = Column(Integer,nullable=False)
+    user_id = Column(String(100))
     header = Column(String(500))
     text = Column(Text(5000))
     html = Column(Text(50000))
@@ -72,13 +73,18 @@ def update_quill(tid, values):
         quilltext.update(values)
         quilltext.save(session=session)
 
-def get_quill_header_by_regin(reg_id):
+def get_quill_header_by_regin(reg_id, user_id):
     session = get_session()
-    return session.query(QuillBase).options(load_only("header")).filter_by(regin_id=reg_id).all()
+    return session.query(QuillBase).options(load_only("header"))\
+                                   .filter_by(regin_id=reg_id)\
+                                   .filter_by(user_id=user_id)\
+                                   .all()
 
-def get_quill_by_regin(reg_id):
+def get_quill_by_regin(reg_id, user_id):
     session = get_session()
-    return session.query(QuillBase).filter_by(regin_id=reg_id).all()
+    return session.query(QuillBase).filter_by(regin_id=reg_id)\
+                                   .filter_by(user_id=user_id)\
+                                   .all()
     
 def get_quill_by_id(tid):
     session = get_session()

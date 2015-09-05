@@ -15,13 +15,15 @@ app.debug=True
 
 @app.route("/")
 def main():
-    quilltexts = db.get_quill_header_by_regin(1)
+    quilltexts = None
     regins = db.get_regins()
     session["regin"] = 1
     return render_template("index.html", quilltext=quilltexts,regins=regins)
     
 @app.route("/note/<tid>",methods=['GET', 'POST'])
 def update_note(tid):
+    if not session["user"]:
+        return 
     if request.method=="GET":
         quilltext = db.get_quill_by_id(tid)
         text = quilltext.text
