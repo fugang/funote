@@ -9,15 +9,26 @@
   <div class="navigation">        
    <div id="regin-menu">
     <select >
+	{% set regin=1 %}
 	{% for i in regins %}
-      <option value="{{ i.id }}">{{i.title}}</option>
+	  {% if i.selected %} 
+        <option value="{{ i.id }}" selected="selected">{{i.title}}</option>
+	  {% else %}
+	    <option value="{{ i.id }}">{{i.title}}</option>
+	  {% endif %}
 	{% endfor %}
     </select >
    </div>
+   
    <div id="user-info">
    <text>name</text>
-   <input id="username" type="text"></text>
-   <button id="login">login</button>
+   {% if user %}
+     <input id="username" type="text" disabled=true value="{{user}}"></text>
+     <button id="login">logout</button>
+	{% else %}
+	  <input id="username" type="text" ></text>
+	  <button id="login">login</button>
+	{% endif %}
    </div>
   </div>
   <h1></h1>
@@ -204,20 +215,48 @@
 		   })
 	  });
 	  $("#login").click(function(){
-	    $("#username").attr({"type":"text","disabled":true});
-		var name = $("#username").val();
-		$.ajax({
+		btname = $("#login").text()
+		console.log("name: " + btname);
+		if(btname=="logout"){
+			console.log("logout")
+			$("#username").attr({"type":"text","disabled":false,"value":null});
+			$("#login").text("login");
+			$.ajax({
+				type:"POST",
+				url:"/logout",
+				success:function(data){
+					$("#tagname").empty();
+				},
+				error: function(data){
+					console.log("logout error");
+				}
+			});
+		}else{
+			console.log("login");
+			var name = $("#username").val();
+			$("#username").attr({"type":"text","disabled":true,"value":name});
+			$("#login").text("logout");
+			$.ajax({
 			type:"POST",
 			url:"/login",
 			data:{name:name},
 			success:function(data){
-				console.log("login success");
+				$("#tagname").empty();
+				var jdata = jQuery.parseJSON(data);
+				jdata.forEach(function(key){
+					note_header = key.header;
+					note_id = key.id;
+					$("#tagname").append("<input type='submit' value='{0}' id='{1}' >".format(note_header, note_id))
+				});
+				note_id=null;
+				change_tag=null;
+				editor.setHTML("");
 			},
 			error: function(data){
 				console.log("login error");
 			}
-		});
-		console.log(name);
+		});			
+		}
 	  });
 	  setInterval(function(){
 		var html = editor.getHTML();

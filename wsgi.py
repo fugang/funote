@@ -15,14 +15,31 @@ app.debug=True
 
 @app.route("/")
 def main():
-    quilltexts = None
     regins = db.get_regins()
-    session["regin"] = 1
-    return render_template("index.html", quilltext=quilltexts,regins=regins)
+    regin = session.get("regin",None)
+    if not regin:
+        session["regin"] = 1
+        regin = 1
+    else:
+        regin = int(regin)
+    values = []
+    for i in regins: 
+        values.append({"title":i.title,
+                         "id":i.id,
+                        "selected":i.id == regin
+                        })
+    user = session.get("user",None)
+    if not user:
+        quilltexts = []
+    else:
+        quilltexts=db.get_quill_header_by_regin(regin,user)
+    return render_template("index.html", quilltext=quilltexts,\
+                           regins=values,user=user)
     
 @app.route("/note/<tid>",methods=['GET', 'POST'])
 def update_note(tid):
-    if not session["user"]:
+    user = session.get("user",None)
+    if not user:
         return 
     if request.method=="GET":
         quilltext = db.get_quill_by_id(tid)
@@ -41,7 +58,8 @@ def update_note(tid):
             
 @app.route("/note",endpoint="/",methods=['GET', 'POST'])
 def new_note():
-    regin_id = session["regin"]
+    regin_id = session.get("regin",None)
+    user = session.get("user",None)
     if request.method=="GET":
         return str(session["regin"])
     elif request.method == "POST":
@@ -51,6 +69,7 @@ def new_note():
         values = {"header":header,
                   "text":text,
                   "regin_id":regin_id,
+                  "user_id":user,
                   "html":html}
         quilltext = db.add_quill(values)
         values = {
@@ -63,19 +82,34 @@ def new_note():
 def regin():
     regin = request.form["regin"]
     session["regin"] = regin
-    quilltext = db.get_quill_header_by_regin(regin)
-    result = []
-    for i in quilltext:
-        result.append({"id":i.id,
+    name = session.get("user",None)
+    if name:
+        quilltext = db.get_quill_header_by_regin(regin,name)
+        result = []
+        for i in quilltext:
+            result.append({"id":i.id,
                       "header":i.header})
-    return json.dumps(result)
+        return json.dumps(result)
+    else:
+        return json.dumps([])
 
 @app.route("/login", methods=["POST"])
 def login():
     name = request.form["name"]
     session["user"] = name
-    return name
-    
+    session["regin"] = 1
+    quilltexts = db.get_quill_header_by_regin(1,name)
+    headers = []
+    for i in quilltexts:
+        headers.append({"header":i.header,
+                        "id":i.id})
+    return json.dumps(headers)
+
+@app.route("/logout",methods=["POST"])
+def logout():
+    session["user"] = None
+    session["regin"] = None
+    return "logout"
 if __name__ == "__main__":
     #app.run("",port=5001, use_reloader=False)
     wsgi.server(eventlet.listen(("0.0.0.0",5001)),app)
