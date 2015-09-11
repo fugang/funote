@@ -130,6 +130,7 @@
 				console.log("change regin"); 
 			},
 			error:function(data){
+				$("h1").text(data.responseText);
 			    console.log("change regin error");
 			},
 		})
@@ -163,8 +164,10 @@
 						change_tag=false;
 						$("h1").text("saved");
 					 },
-					 error:function(){
-						$("h1").text("server error");
+					 error:function(data){
+						$("h1").text(data.responseText);
+						console.log("create error");
+						
 					 }
 				  })
 			   }else{
@@ -178,9 +181,9 @@
 					  $("h1").text("saved");
 					  console.log("update success");
                    },
-                   error:function(){
-				     $("h1").text("server error");
-					 console.log("server error");
+                   error:function(data){
+				     $("h1").text(data.responseText);
+					 console.log("update error");
                    }
 			     })
 			   }
@@ -208,9 +211,8 @@
 				console.log("load html");
 				$("h1").text("load html");
              },
-             error:function(){
-                alert("server  error");
-				$("h1").text("server  error");
+             error:function(data){
+				$("h1").text(data.responseText);
              }
 		   })
 	  });
@@ -229,13 +231,12 @@
 				},
 				error: function(data){
 					console.log("logout error");
+					$("h1").text(data.responseText);
 				}
 			});
 		}else{
 			console.log("login");
 			var name = $("#username").val();
-			$("#username").attr({"type":"text","disabled":true,"value":name});
-			$("#login").text("logout");
 			$.ajax({
 			type:"POST",
 			url:"/login",
@@ -251,9 +252,13 @@
 				note_id=null;
 				change_tag=null;
 				editor.setHTML("");
+				$("#username").attr({"type":"text","disabled":true,"value":name});
+				$("#login").text("logout");
+				$("h1").text("welcome");
 			},
 			error: function(data){
 				console.log("login error");
+				$("h1").text(data.responseText);
 			}
 		});			
 		}
@@ -272,9 +277,9 @@
 					console.log("update success");
 					$("h1").text("saved");
                  },
-                 error:function(){
+                 error:function(data){
                     console.log("server error");
-					$("h1").text("server error");
+					$("h1").text(data.responseText);
                  }
 			  })
 			  change_tag=false;
@@ -296,9 +301,9 @@
 					console.log("create");
 					$("h1").text("create new content");
                  },
-                 error:function(){
+                 error:function(data){
                     console.log("server  error");
-					$("h1").text("server error");
+					$("h1").text(data.responseText);
                  }
 			  })
 			  change_tag=false;

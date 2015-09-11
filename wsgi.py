@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, g, session
+from flask import Flask, render_template, request, g, session, abort,flash
 import db
 import json
 import eventlet
@@ -8,7 +8,6 @@ SECRET_KEY = "zyHyipIPMTtQUe4P"
 
 app = Flask(__name__)
 app.config.from_object(__name__)
-app.debug = True
 app.config.from_envvar('MINITWIT_SETTINGS', silent=True)
 app.debug=True
 
@@ -40,7 +39,7 @@ def main():
 def update_note(tid):
     user = session.get("user",None)
     if not user:
-        return 
+        return "no user found", 401
     if request.method=="GET":
         quilltext = db.get_quill_by_id(tid)
         text = quilltext.text
@@ -60,6 +59,8 @@ def update_note(tid):
 def new_note():
     regin_id = session.get("regin",None)
     user = session.get("user",None)
+    if not user:
+        return "not user found",401
     if request.method=="GET":
         return str(session["regin"])
     elif request.method == "POST":
@@ -91,7 +92,12 @@ def regin():
                       "header":i.header})
         return json.dumps(result)
     else:
-        return json.dumps([])
+        return "no user found", 401
+
+@app.teardown_request
+def teardown_request(exception):
+    print "sdfdsfsdfds"
+    return "sdfsdfsdfsdfsd"
 
 @app.route("/login", methods=["POST"])
 def login():
