@@ -94,10 +94,6 @@ def regin():
     else:
         return "no user found", 401
 
-@app.teardown_request
-def teardown_request(exception):
-    print "sdfdsfsdfds"
-    return "sdfsdfsdfsdfsd"
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -118,4 +114,4 @@ def logout():
     return "logout"
 if __name__ == "__main__":
     #app.run("",port=5001, use_reloader=False)
-    wsgi.server(eventlet.listen(("0.0.0.0",5001)),app)
+    wsgi.server(eventlet.listen(("0.0.0.0",5000)),app)

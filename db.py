@@ -93,3 +93,9 @@ def get_quill_by_id(tid):
 def get_regins():
     session = get_session()
     return session.query(ReginBase).all()
+
+def query_text(keywd):
+    session = get_session()
+    keystr = "%%%s%%" % keywd
+    print keystr
+    return session.query(QuillBase).filter(QuillBase.text.like(keystr)).all()
