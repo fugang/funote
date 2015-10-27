@@ -204,6 +204,7 @@
 		
       });
 	  $( document ).on("click","input[type=submit]",function(event){
+                change_tag=false;
 		note_id = $(this).attr("id");
 		   $.ajax({
 		     type:"GET",
