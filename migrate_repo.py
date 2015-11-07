@@ -6,6 +6,7 @@ meta = MetaData()
 engine = create_engine("sqlite:///tmp/quill.db")
 
 quillbase = Table("quillbase", meta,
+                  Column("click_count",Integer()),
                   Column("created_at",DateTime()),
                   Column("id", Integer(), primary_key=True, nullable=False),
                   Column("regin_id",Integer(),nullable=False),

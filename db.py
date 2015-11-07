@@ -40,6 +40,7 @@ class QuillBase(Base, MyBase):
     __table_args__ = (
         Index("regin_id","regin_id"),
     )
+    click_count = Column(Integer)
     created_at = Column(DateTime, default=datetime.now())
     id = Column(Integer, primary_key=True,nullable=False)
     regin_id = Column(Integer,nullable=False)
@@ -73,12 +74,27 @@ def update_quill(tid, values):
         quilltext.update(values)
         quilltext.save(session=session)
 
+def add_click_quill(tid):
+    session = get_session()
+    with session.begin():
+        quilltext = session.query(QuillBase).filter_by(id=tid).first()
+        count = quilltext.click_count
+        if count is None:
+            count = 1
+        else:
+            count += 1
+        quilltext.update({"click_count":count})
+        quilltext.save(session=session)
+
+
 def get_quill_header_by_regin(reg_id, user_id):
     session = get_session()
-    return session.query(QuillBase).options(load_only("header"))\
+    result = session.query(QuillBase).options(load_only("header","click_count","created_at"))\
                                    .filter_by(regin_id=reg_id)\
                                    .filter_by(user_id=user_id)\
+                                   .order_by(QuillBase.click_count.desc())\
                                    .all()
+    return result
 
 def get_quill_by_regin(reg_id, user_id):
     session = get_session()

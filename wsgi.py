@@ -44,6 +44,7 @@ def update_note(tid):
         quilltext = db.get_quill_by_id(tid)
         text = quilltext.text
         html = quilltext.html
+        db.add_click_quill(tid)
         return html
     elif request.method == "POST":
         html = request.form["html"]
